@@ -49,13 +49,13 @@ info:
     |`X-Auth-Token`|`access_token `|Obtained by creating an API account or installing an app in a BigCommerce control panel.|
 
     ### OAuth Scopes
-    |  **UI Name** | **Permission** | **Parameter** |
-    | --- | --- | --- |
-    |  Customers | modify | `store_v2_customers` |
-    |  Customers | read-only | `store_v2_customers_read_only` |
-    | Stored Payment Instruments| modify | `store_stored_payment_instruments`|
-    | Stored Payment Instruments| read-only | `store_stored_payment_instruments_read_only` |
 
+    | UI Name                                      | Permission | Parameter                                     |
+    |----------------------------------------------|------------|-----------------------------------------------|
+    | Customers                                    | modify     | `store_v2_customers`                          |
+    | Customers                                    | read-only  | `store_v2_customers_read_only`                |
+    | Stored Payment Instruments                   | modify     | `store_stored_payment_instruments`            |
+    | Stored Payment Instruments                   | read-only  | `store_stored_payment_instruments_read_only`  |
 
     For more information on Authenticating BigCommerce APIs, see: [Authentication](https://developer.bigcommerce.com/api-docs/getting-started/authentication).
 
@@ -269,7 +269,7 @@ paths:
             examples:
               example-1:
                 value:
-                  - email: string
+                  - email: string@example.com
                     first_name: string
                     last_name: string
                     company: string
@@ -291,7 +291,7 @@ paths:
                         state_or_province: California
                     attributes:
                       - attribute_id: 55
-                        value: string
+                        attribute_value: string
                     authentication:
                       force_password_reset: true
                       new_password: string
@@ -1432,7 +1432,10 @@ paths:
                     additionalProperties:
                       type: string
       summary: Get Customer Form Field Values
-      description: Returns a list of Form Field Values for the Customer or Customer Address object.
+      description: |-
+        Returns a list of form field values for the Customer or Customer Address object.
+
+        To learn about adding and managing form fields, see [Adding and Editing Fields in the Account Signup Form](https://support.bigcommerce.com/s/article/Editing-Form-Fields).
       operationId: CustomerFormFieldsGet
       tags:
         - Customer Form Field Values
@@ -1498,7 +1501,7 @@ paths:
     put:
       responses:
         '200':
-          $ref: '#/components/responses/FormFieldValueCollectionResponse'
+          $ref: '#/components/responses/FormFieldValuesResponse'
         '422':
           description: 'The form field value was not valid. This is the result of missing required fields, or of invalid data. See the response for more details.'
           content:
@@ -1524,9 +1527,11 @@ paths:
                       type: string
       summary: Upsert Customer Form Field Values
       description: |-
-        Upserts Customer Form Field Values. Updates the form field values on the Customer or Customer Address. Multiple form field values can be updated in one call.
+        Updates form field values on the Customer or Customer Address objects. Multiple form field values can be updated in one call.
 
         Upsert checks for an existing record, if there is none it creates the record, if there is a matching record it updates that record.
+
+        To learn more about editing form fields, see [Adding and Editing Fields in the Account Signup Form](https://support.bigcommerce.com/s/article/Editing-Form-Fields).
       operationId: CustomerFormFieldValuePUT
       tags:
         - Customer Form Field Values
@@ -1540,9 +1545,15 @@ paths:
             examples:
               Example:
                 value:
-                  - name: color
-                    value: blue
-                    customer_id: 0
+                  - customer_id: 12
+                    name: Sales Rep
+                    value: Miss Moneypenny
+                  - customer_id: 12
+                    name: How did you hear about us?
+                    value: Other
+                  - customer_id: 12
+                    name: What is your favorite pizza topping?
+                    value: Mushrooms
   '/customers/{customerId}/consent':
     get:
       description: Gets the status of a customer's consent to allow data collection by cookies and scripts while shopping on a storefront.
@@ -1627,7 +1638,7 @@ paths:
       tags:
         - Customer Stored Instruments
       description: |-
-        Lists all available stored instruments for a customer. This list will include all types of stored instruments namely `card`, `account` and `bank_account` instruments. Requires the **Stored Payment Instruments** OAuth scope (`store_stored_payment_instruments_read_only`).
+        Lists all available stored instruments for a customer. This list will include all types of stored instruments namely card, account and bank_account instruments
 
         <div class="HubBlock--callout">
         <div class="CalloutBlock--info">
@@ -1703,8 +1714,6 @@ paths:
               example:
                 code: 403
                 message: Missing scope
-      security:
-        - X-Auth-Token: []
 components:
   parameters:
     customerId:
@@ -3423,7 +3432,7 @@ components:
                       description: Attribute ID.
                       type: integer
                       format: int32
-                    value:
+                    attribute_value:
                       description: 'Attribute value. This will always be a string, regardless of the attributes type.'
                       type: string
                       minLength: 0
@@ -3446,7 +3455,7 @@ components:
                       format: date-time
                   required:
                     - attribute_id
-                    - value
+                    - attribute_value
                     - customer_id
               meta:
                 title: Collection Meta
@@ -3768,39 +3777,92 @@ components:
                             description: Link to the next page returned in the response.
                             type: string
           examples:
-            response:
+            Customer and Customer Address Form Fields example:
               value:
                 data:
-                  - customer_id: 1
-                    name: color
-                    value: blue
-                  - customer_id: 1
-                    name: weight
-                    value: 12.345
-                  - customer_id: 1
-                    name: colors
-                    value:
-                      - red
-                      - green
-                      - black
-                  - address_id: 2
-                    name: color
-                    value: blue
-                  - address_id: 2
-                    name: weight
-                    value: 12.345
-                  - address_id: 2
-                    name: colors
-                    value:
-                      - red
-                      - green
-                      - black
+                  - customer_id: 11
+                    name: Sales Rep
+                    value: James Bond
+                  - customer_id: 11
+                    name: How did you hear about us?
+                    value: Friend
+                  - customer_id: 11
+                    name: What is your favorite pizza topping?
+                    value: Black olives
+                  - customer_id: 12
+                    name: Sales Rep
+                    value: None
+                  - customer_id: 12
+                    name: How did you hear about us?
+                    value: Friend
+                  - customer_id: 12
+                    name: What is your favorite pizza topping?
+                    value: Mushrooms
+                  - customer_id: 13
+                    name: Sales Rep
+                    value: Felix Leiter
+                  - customer_id: 13
+                    name: How did you hear about us?
+                    value: Email
+                  - customer_id: 13
+                    name: What is your favorite pizza topping?
+                    value: Green pepper
+                  - customer_id: 13
+                    name: Occupation
+                    value: Housekeeper
+                  - address_id: 12
+                    name: Special Delivery Instructions
+                    value: Leave the package at the front door
+                  - customer_id: 14
+                    name: Sales Rep
+                    value: General Gogol
+                  - customer_id: 14
+                    name: How did you hear about us?
+                    value: Friend
+                  - customer_id: 14
+                    name: What is your favorite pizza topping?
+                    value: Extra cheese
+                  - address_id: 13
+                    name: Special Delivery Instructions
+                    value: Put the package in the mailbox
                 meta:
                   pagination:
-                    total: 6
-                    count: 6
-                    per_page: 50
+                    count: 15
                     current_page: 1
+                    per_page: 50
+                    total: 15
+                    total_pages: 1
+            Customer Form Fields example:
+              value:
+                data:
+                  - customer_id: 11
+                    name: Sales Rep
+                    value: James Bond
+                  - customer_id: 11
+                    name: How did you hear about us?
+                    value: Friend
+                  - customer_id: 11
+                    name: What is your favorite pizza topping?
+                    value: Black olives
+                meta:
+                  pagination:
+                    count: 3
+                    current_page: 1
+                    per_page: 50
+                    total: 3
+                    total_pages: 1
+            Customer Address Form Fields example:
+              value:
+                data:
+                  - address_id: 12
+                    name: Special Delivery Instructions
+                    value: Leave the package at the front door
+                meta:
+                  pagination:
+                    count: 1
+                    current_page: 1
+                    per_page: 50
+                    total: 1
                     total_pages: 1
     FormFieldValuesResponse:
       description: ''
@@ -3885,30 +3947,15 @@ components:
             response:
               value:
                 data:
-                  - customer_id: 1
-                    name: color
-                    value: blue
-                  - customer_id: 1
-                    name: weight
-                    value: 12.345
-                  - customer_id: 1
-                    name: colors
-                    value:
-                      - red
-                      - green
-                      - black
-                  - address_id: 2
-                    name: color
-                    value: blue
-                  - address_id: 2
-                    name: weight
-                    value: 12.345
-                  - address_id: 2
-                    name: colors
-                    value:
-                      - red
-                      - green
-                      - black
+                  - customer_id: 12
+                    name: Sales Rep
+                    value: Miss Moneypenny
+                  - customer_id: 12
+                    name: How did you hear about us?
+                    value: Other
+                  - customer_id: 12
+                    name: What is your favorite pizza topping?
+                    value: Mushrooms
                 meta: {}
     consent_Resp:
       description: ''
@@ -4187,6 +4234,7 @@ components:
         - email
         - first_name
         - last_name
+        - addresses
     customer_Put:
       title: customer_Put
       type: object
@@ -4278,8 +4326,8 @@ components:
           type: integer
           format: int32
         value:
-          type: string
           description: 'Attribute value. This will always be a string, regardless of the attributes type.'
+          type: string
           minLength: 0
           maxLength: 255
           example: string
@@ -4999,7 +5047,7 @@ components:
           format: int32
           example: 55
           description: Attribute ID.
-        value:
+        attribute_value:
           type: string
           example: string
           minLength: 0
@@ -5165,8 +5213,6 @@ components:
         phone:
           type: string
           example: 101-192-0293
-        store_credit_amounts:
-          $ref: '#/components/schemas/CustomerStoredCreditAmounts'
     CustomerStoredCreditAmounts:
       description: 'Store credit. '
       type: array

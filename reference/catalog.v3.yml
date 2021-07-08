@@ -207,8 +207,7 @@ paths:
           in: query
           type: boolean
         - name: is_featured
-          description: |
-            Filter items by is_featured. `0` for true, `1` for false.
+          description: 'Filter items by is_featured. `1` for true, `0` for false.'
           required: false
           in: query
           type: integer
@@ -216,8 +215,7 @@ paths:
             - 1
             - 0
         - name: is_free_shipping
-          description: |
-            Filter items by is_free_shipping.
+          description: 'Filter items by is_free_shipping. `1` for true, `0` for false.'
           required: false
           in: query
           type: integer
@@ -371,6 +369,10 @@ paths:
           in: query
           description: 'Filter items by categories. Use for products in multiple categories. For example, `categories:in=12`.'
           name: 'categories:in'
+        - type: array
+          in: query
+          name: 'sku:in'
+          description: Filter items by sku.
       responses:
         '200':
           $ref: '#/responses/ProductCollectionResponse'
@@ -14598,10 +14600,7 @@ paths:
         - name: product_id
           in: query
           type: string
-          description: |-
-            A comma-separated list of ids of Products whose prices were requested. For example:
-            `?product_id=:id`
-            `?product_id:in=77,80,81`
+          description: 'A comma-separated list of IDs of products whose variants were requested. For example:`?product_id=:id``?product_id:in=77,80,81`'
       responses:
         '200':
           description: ''
@@ -16930,7 +16929,7 @@ paths:
         required: true
         description: The ID of the `Category` to which the resource belongs.
     get:
-      summary: Get Product Sort Order (Beta)
+      summary: Get Product Sort Order
       responses:
         '200':
           $ref: '#/responses/ProductSortOrderResponse'
@@ -16944,17 +16943,6 @@ paths:
         * Data pairs are displayed in ascending order based on products' `sort_order` values.
         * `null` values are allowed for products without specified `sort_order` values.
         * Products with `sort_order` value of `null` will be displayed after products with valid numerical values.
-
-        <div class="HubBlock--callout">
-        <div class="CalloutBlock--info">
-        <div class="HubBlock-content">
-
-        > ### Note
-        > This endpoint is in beta.
-
-        </div>
-        </div>
-        </div>
       parameters:
         - type: string
           in: header
@@ -16969,7 +16957,7 @@ paths:
       tags:
         - Product Sort Order
     put:
-      summary: Update Product Sort Order (Beta)
+      summary: Update Product Sort Order
       operationId: updatesortorder
       responses:
         '200':
@@ -16978,19 +16966,7 @@ paths:
           $ref: '#/responses/Error404Response'
         '422':
           $ref: '#/responses/Error422Response'
-      description: |-
-        Updates *Sort Order* of products within a specific category.
-
-        <div class="HubBlock--callout">
-        <div class="CalloutBlock--info">
-        <div class="HubBlock-content">
-
-        > ### Note
-        > This endpoint is in beta.
-
-        </div>
-        </div>
-        </div>
+      description: Updates *Sort Order* of products within a specific category.
       parameters:
         - type: string
           in: header

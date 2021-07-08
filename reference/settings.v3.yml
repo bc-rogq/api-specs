@@ -29,6 +29,7 @@ info:
 tags:
   - name: Email Statuses
   - name: Search Filters
+  - name: Store Locale
   - name: Storefront Category
   - name: Storefront Robotstxt
   - name: Storefront Search
@@ -274,76 +275,6 @@ paths:
         - $ref: '#/components/parameters/RequiredChannelIdParamForDelete'
         - $ref: '#/components/parameters/KeysToDelete'
       description: Delete storefront robots.txt.
-  /settings/storefront/category:
-    get:
-      summary: Get Category Settings
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/StorefrontCategorySettings'
-                  meta:
-                    type: object
-              examples:
-                example-1:
-                  value:
-                    data:
-                      listing_mode: null
-                      default_product_sort: bestselling
-                      category_tree_depth: 0
-                    meta: {}
-        '422':
-          description: Provided settings could not be applied for some reason - detailed errors in the response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      parameters:
-        - $ref: '#/components/parameters/ChannelIdParam'
-      description: Get storefront category settings.
-      tags:
-        - Storefront Category
-    put:
-      summary: Update Category Settings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StorefrontCategorySettings'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/StorefrontCategorySettings'
-                  meta:
-                    type: object
-      parameters:
-        - $ref: '#/components/parameters/ChannelIdParam'
-      tags:
-        - Storefront Category
-      description: Update storefront category settings.
-    delete:
-      summary: Delete  Category
-      tags:
-        - Storefront Category
-      operationId: delete-settings-storefrontcategory
-      responses:
-        '200':
-          description: OK
-      parameters:
-        - $ref: '#/components/parameters/RequiredChannelIdParamForDelete'
-        - $ref: '#/components/parameters/KeysToDelete'
-      description: Delete storefront category settings.
   /settings/storefront/search:
     get:
       summary: Get Search Settings
@@ -802,6 +733,77 @@ paths:
           description: No Content
       parameters:
         - $ref: '#/components/parameters/ChannelIdParam'
+  /settings/store/locale:
+    get:
+      summary: Get Locale Settings
+      description: Returns global locale settings.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Locale'
+                  meta:
+                    type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      default_shopper_language: en
+                      store_country: United States
+                    meta: {}
+        '422':
+          description: Provided settings could not be applied for some reason - detailed errors in the response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Store Locale
+    put:
+      summary: Update Locale Settings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Locale'
+                  meta:
+                    type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      default_shopper_language: en
+                      store_country: United States
+                    meta: {}
+        '422':
+          description: Provided settings could not be applied for some reason - detailed errors in the response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Locale'
+            examples:
+              Example:
+                value:
+                  default_shopper_language: en
+                  store_country: United States
+      tags:
+        - Store Locale
+      description: Updates global locale settings.
 components:
   schemas:
     AnalyticsProvider:
@@ -843,15 +845,6 @@ components:
             - none
         meta_keywords:
           type: string
-    StorefrontCategorySettings:
-      type: object
-      properties:
-        listing_mode:
-          $ref: ''
-        default_product_sort:
-          $ref: '#/components/schemas/ProductSortEnumValues'
-        category_tree_depth:
-          type: integer
     StorefrontSearchSettings:
       type: object
       properties:
@@ -875,6 +868,16 @@ components:
           type: string
         store_address:
           type: string
+    Locale:
+      description: 'The basic locale settings for a store, used to give shopper information about languages, countries, etc.'
+      type: object
+      properties:
+        default_shopper_language:
+          type: string
+          default: en
+        store_country:
+          type: string
+          default: United States
     StorefrontStatus:
       title: ''
       type: object
