@@ -71,12 +71,9 @@ info:
     ## Resources
 
     ### Webhooks
-    * [Products](/api-docs/getting-started/webhooks/webhook-events#webhook-events_products)
-    * [Categories](/api-docs/getting-started/webhooks/webhook-events#webhook-events_category)
-    * [SKU](/api-docs/getting-started/webhooks/webhook-events#webhook-events_sku)
-
-    ### Related Endpoints
-    * [Catalog API](/api-reference/catalog/catalog-api)
+    * [Products](/api-docs/store-management/webhooks/events#products)
+    * [Categories](/api-docs/store-management/webhooks/events#category)
+    * [SKU](/api-docs/store-management/webhooks/events#sku)
   termsOfService: ''
   license:
     name: ''
@@ -93,6 +90,7 @@ tags:
   - name: Categories
   - name: Category Metafields
   - name: Category Images
+  - name: Product Sort Order
   - name: Products
   - name: Product Bulk Pricing Rules
   - name: Product Complex Rules
@@ -135,12 +133,6 @@ paths:
         - name: name
           description: |
             Filter items by name.
-          required: false
-          in: query
-          type: string
-        - name: sku
-          description: |
-            Filter items by sku.
           required: false
           in: query
           type: string
@@ -212,8 +204,7 @@ paths:
           in: query
           type: boolean
         - name: is_featured
-          description: |
-            Filter items by is_featured. `0` for true, `1` for false.
+          description: 'Filter items by is_featured. `1` for true, `0` for false.'
           required: false
           in: query
           type: integer
@@ -221,8 +212,7 @@ paths:
             - 1
             - 0
         - name: is_free_shipping
-          description: |
-            Filter items by is_free_shipping.
+          description: 'Filter items by is_free_shipping. `1` for true, `0` for false.'
           required: false
           in: query
           type: integer
@@ -376,6 +366,10 @@ paths:
           in: query
           description: 'Filter items by categories. Use for products in multiple categories. For example, `categories:in=12`.'
           name: 'categories:in'
+        - type: array
+          in: query
+          name: 'sku:in'
+          description: Filter items by sku.
       responses:
         '200':
           $ref: '#/responses/ProductCollectionResponse'
@@ -839,7 +833,7 @@ paths:
                   - 23
                   - 21
                 brand_id: 36
-                option_set_id: {}
+                option_set_id: 55
                 option_set_display: right
                 inventory_level: 0
                 inventory_warning_level: 0
@@ -875,7 +869,7 @@ paths:
                 date_created: '2018-08-15T14:48:46+00:00'
                 date_modified: '2018-09-05T20:42:07+00:00'
                 view_count: 10
-                preorder_release_date: {}
+                preorder_release_date: '2018-09-05T20:42:07+00:00'
                 preorder_message: ''
                 is_preorder_only: false
                 is_price_hidden: false
@@ -1256,7 +1250,7 @@ paths:
                     type: string
                   image_file:
                     description: |
-                      Must be sent as a multipart/form-data field in the request body.
+                      Must be sent as a multipart/form-data field in the request body. Limit of 1MB per file.
                     type: string
             title: Product Image Post
             type: object
@@ -1276,6 +1270,7 @@ paths:
                 -H 'X-Auth-Token: {X-Auth-Token:}' \
                 -H 'content-type: multipart/form-data; boundary=-WebKitFormBoundary7MA4YWxkTrZu0gW' \
                 -F image_file=@/Users/user.name/Documents/docs_images/product-image.png
+          description: ''
         - in: header
           type: string
           name: Accept
@@ -1288,7 +1283,7 @@ paths:
           required: true
       responses:
         '200':
-          description: ''
+          description: Success
           schema:
             description: |
               Response payload for the BigCommerce API.
@@ -1411,6 +1406,11 @@ paths:
                 url_tiny: 'https://cdn8.bigcommerce.com/s-id30h7ohwf/products/158/images/485/product-image__98178.1536854227.66.100.png?c=2'
                 date_modified: '2018-09-13T15:57:07+00:00'
               meta: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: |
             The product ID does not exist.
@@ -1430,10 +1430,36 @@ paths:
               instance:
                 type: string
             title: Not Found
+        '422':
+          description: |-
+            Unprocessable Entity. 
+
+            May occur if the `Content-Type` header is set to `multipart/form-data` rather than `application/json` when creating a product image using `image_url`.
+          schema:
+            description: ''
+            type: object
+            properties:
+              status:
+                type: number
+              title:
+                type: string
+                minLength: 1
+              type:
+                type: string
+                minLength: 1
+            required:
+              - status
+              - title
+              - type
+          examples:
+            Example:
+              status: 422
+              title: image_url must be present if uploading by url
+              type: 'https://developer.bigcommerce.com/api-docs/getting-started/api-status-codes'
       summary: Create a Product Image
       consumes:
-        - multipart/form-data
         - application/json
+        - multipart/form-data
       tags:
         - Product Images
   '/catalog/products/{product_id}/images/{image_id}':
@@ -1732,6 +1758,16 @@ paths:
                 url_tiny: 'https://cdn8.bigcommerce.com/s-id30h7ohwf/products/158/images/485/product-image__98178.1536854227.66.100.png?c=2'
                 date_modified: '2018-09-13T15:57:07+00:00'
               meta: {}
+        '201':
+          description: Created
+          schema:
+            type: object
+            properties: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: |
             The resource was not found.
@@ -2369,16 +2405,16 @@ paths:
                   sku_id: 348
                   price: 10
                   calculated_price: 10
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 8
+                  retail_price: 10
                   map_price: {}
-                  weight: {}
+                  weight: 4
                   calculated_weight: 2
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -2398,22 +2434,22 @@ paths:
                   product_id: 192
                   sku: SMIT-1
                   sku_id: 349
-                  price: {}
+                  price: 25
                   calculated_price: 25
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 20
+                  retail_price: 25
                   map_price: {}
-                  weight: {}
+                  weight: 2
                   calculated_weight: 1
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
-                  cost_price: {}
+                  cost_price: 25
                   upc: ''
                   mpn: ''
                   gtin: ''
@@ -2429,22 +2465,22 @@ paths:
                   product_id: 192
                   sku: SMIT-2
                   sku_id: 350
-                  price: {}
+                  price: 25
                   calculated_price: 25
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 20
+                  retail_price: 25
                   map_price: {}
-                  weight: {}
+                  weight: 2
                   calculated_weight: 1
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
-                  cost_price: {}
+                  cost_price: 25
                   upc: ''
                   mpn: ''
                   gtin: ''
@@ -2549,22 +2585,22 @@ paths:
                 product_id: 192
                 sku: SMIT-2
                 sku_id: 350
-                price: {}
+                price: 25
                 calculated_price: 25
-                sale_price: {}
-                retail_price: {}
+                sale_price: 20
+                retail_price: 25
                 map_price: {}
-                weight: {}
+                weight: 2
                 calculated_weight: 1
-                width: {}
-                height: {}
-                depth: {}
+                width: 5
+                height: 5
+                depth: 5
                 is_free_shipping: false
-                fixed_cost_shipping_price: {}
+                fixed_cost_shipping_price: 10
                 purchasing_disabled: false
                 purchasing_disabled_message: ''
                 image_url: ''
-                cost_price: {}
+                cost_price: 25
                 upc: ''
                 mpn: ''
                 gtin: ''
@@ -2657,22 +2693,22 @@ paths:
                 product_id: 192
                 sku: SMIT-2
                 sku_id: 350
-                price: {}
+                price: 25
                 calculated_price: 25
-                sale_price: {}
-                retail_price: {}
+                sale_price: 20
+                retail_price: 25
                 map_price: {}
-                weight: {}
+                weight: 2
                 calculated_weight: 1
-                width: {}
-                height: {}
-                depth: {}
+                width: 5
+                height: 5
+                depth: 5
                 is_free_shipping: false
-                fixed_cost_shipping_price: {}
+                fixed_cost_shipping_price: 10
                 purchasing_disabled: false
                 purchasing_disabled_message: ''
                 image_url: ''
-                cost_price: {}
+                cost_price: 25
                 upc: ''
                 mpn: ''
                 gtin: ''
@@ -2778,7 +2814,7 @@ paths:
                 retail_price: 89
                 sale_price: 85
                 sku: OTS
-                sku_id: null
+                sku_id: 10
                 upc: ''
                 weight: 1
                 width: 2
@@ -3047,7 +3083,7 @@ paths:
               instance:
                 type: string
             title: Not Found
-      summary: Get Product Variant Metafields
+      summary: Get All Product Variant Metafields
       tags:
         - Product Variants Metafields
     post:
@@ -3452,7 +3488,7 @@ paths:
               instance:
                 type: string
             title: Not Found
-      summary: Get Product Variant Metafields
+      summary: Get a Product Variant Metafields
       tags:
         - Product Variants Metafields
     put:
@@ -3622,6 +3658,11 @@ paths:
               data:
                 image_url: 'https://cdn8.bigcommerce.com/s-id30h7ohwf/product_images/attribute_rule_images/85_source_1536863430.png'
               meta: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: |
             The resource was not found.
@@ -3918,13 +3959,13 @@ paths:
                         format: date
                         description: |
                           (date) The earliest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2018-08-31T05:00:00+00:00'
+                        example: '2018-08-31'
                       date_latest_value:
                         type: string
                         format: date
                         description: |
                           (date) The latest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2019-01-01T05:00:00+00:00'
+                        example: '2019-01-01'
                       file_types_mode:
                         type: string
                         description: |
@@ -3939,14 +3980,14 @@ paths:
                           (file) The type of files allowed to be uploaded if the `file_type_option` is set to `specific`. Values:
                             `images` - Allows upload of image MIME types (`bmp`, `gif`, `jpg`, `jpeg`, `jpe`, `jif`, `jfif`, `jfi`, `png`, `wbmp`, `xbm`, `tiff`). `documents` - Allows upload of document MIME types (`txt`, `pdf`, `rtf`, `doc`, `docx`, `xls`, `xlsx`, `accdb`, `mdb`, `one`, `pps`, `ppsx`, `ppt`, `pptx`, `pub`, `odt`, `ods`, `odp`, `odg`, `odf`).
                             `other` - Allows file types defined in the `file_types_other` array.
-                        example: 'images, documents, other'
+                        example: [images, documents, other]
                         items:
                           type: string
                       file_types_other:
                         type: array
                         description: |
                           (file) A list of other file types allowed with the file upload option.
-                        example: pdf
+                        example: [pdf, txt]
                         items:
                           type: string
                       file_max_size:
@@ -4436,13 +4477,13 @@ paths:
                         format: date
                         description: |
                           (date) The earliest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2018-08-31T05:00:00+00:00'
+                        example: '2018-08-31'
                       date_latest_value:
                         type: string
                         format: date
                         description: |
                           (date) The latest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2019-01-01T05:00:00+00:00'
+                        example: '2019-01-01'
                       file_types_mode:
                         type: string
                         description: |
@@ -4457,14 +4498,14 @@ paths:
                           (file) The type of files allowed to be uploaded if the `file_type_option` is set to `specific`. Values:
                             `images` - Allows upload of image MIME types (`bmp`, `gif`, `jpg`, `jpeg`, `jpe`, `jif`, `jfif`, `jfi`, `png`, `wbmp`, `xbm`, `tiff`). `documents` - Allows upload of document MIME types (`txt`, `pdf`, `rtf`, `doc`, `docx`, `xls`, `xlsx`, `accdb`, `mdb`, `one`, `pps`, `ppsx`, `ppt`, `pptx`, `pub`, `odt`, `ods`, `odp`, `odg`, `odf`).
                             `other` - Allows file types defined in the `file_types_other` array.
-                        example: 'images, documents, other'
+                        example: [images, documents, other]
                         items:
                           type: string
                       file_types_other:
                         type: array
                         description: |
                           (file) A list of other file types allowed with the file upload option.
-                        example: pdf
+                        example: [pdf, txt]
                         items:
                           type: string
                       file_max_size:
@@ -5821,13 +5862,13 @@ paths:
                         format: date
                         description: |
                           (date) The earliest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2018-08-31T05:00:00+00:00'
+                        example: '2018-08-31'
                       date_latest_value:
                         type: string
                         format: date
                         description: |
                           (date) The latest date allowed to be entered on the date option, as an ISO-8601 formatted string.
-                        example: '2019-01-01T05:00:00+00:00'
+                        example: '2019-01-01'
                       file_types_mode:
                         type: string
                         description: |
@@ -5842,14 +5883,14 @@ paths:
                           (file) The type of files allowed to be uploaded if the `file_type_option` is set to `specific`. Values:
                             `images` - Allows upload of image MIME types (`bmp`, `gif`, `jpg`, `jpeg`, `jpe`, `jif`, `jfif`, `jfi`, `png`, `wbmp`, `xbm`, `tiff`). `documents` - Allows upload of document MIME types (`txt`, `pdf`, `rtf`, `doc`, `docx`, `xls`, `xlsx`, `accdb`, `mdb`, `one`, `pps`, `ppsx`, `ppt`, `pptx`, `pub`, `odt`, `ods`, `odp`, `odg`, `odf`).
                             `other` - Allows file types defined in the `file_types_other` array.
-                        example: 'images, documents, other'
+                        example: [images, documents, other]
                         items:
                           type: string
                       file_types_other:
                         type: array
                         description: |
                           (file) A list of other file types allowed with the file upload option.
-                        example: pdf
+                        example: [pdf, txt]
                         items:
                           type: string
                       file_max_size:
@@ -8339,6 +8380,11 @@ paths:
               data:
                 image_url: 'https://cdn8.bigcommerce.com/s-id30h7ohwf/product_images/attribute_rule_images/85_source_1536863430.png'
               meta: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: |
             The resource was not found.
@@ -8483,7 +8529,7 @@ paths:
                     - rule_id: 82
                       modifier_id: 221
                       modifier_value_id: 175
-                      variant_id: {}
+                      variant_id: 1
                       combination_id: 0
                 - id: 83
                   product_id: 195
@@ -8502,7 +8548,7 @@ paths:
                     - rule_id: 83
                       modifier_id: 221
                       modifier_value_id: 174
-                      variant_id: {}
+                      variant_id: 1
                       combination_id: 0
               meta:
                 pagination:
@@ -9733,7 +9779,7 @@ paths:
                   quantity_min: 4
                   quantity_max: 0
                   type: price
-                  amount: 1.25
+                  amount: 1
               meta:
                 pagination:
                   total: 2
@@ -10772,6 +10818,10 @@ paths:
           type: string
           default: application/json
           required: true
+        - type: integer
+          in: query
+          name: status
+          description: 'Filter items by status. `1` for approved, `0` for pending.'
       responses:
         '200':
           description: ''
@@ -12904,6 +12954,11 @@ paths:
               data:
                 image_url: 'https://cdn11.bigcommerce.com/s-{store_hash}/product_images/k/group_1545334669__76009.png'
               meta: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: |
             The resource was not found.
@@ -13172,7 +13227,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13183,7 +13238,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13194,7 +13249,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13205,7 +13260,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13216,7 +13271,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13227,7 +13282,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13238,7 +13293,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13249,7 +13304,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13260,7 +13315,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -13271,7 +13326,7 @@ paths:
                   page_title: ''
                   meta_keywords:
                     - ''
-                  meta_description: {}
+                  meta_description: 'description'
                   image_url: ''
                   search_keywords: ''
                   custom_url:
@@ -14479,6 +14534,11 @@ paths:
               data:
                 image_url: 'https://cdn11.bigcommerce.com/s-{store_hash}/product_images/k/group_1545334669__76009.png'
               meta: {}
+        '400':
+          description: Bad Request. The requested resource could not be downloaded and may be invalid. Possible reasons include malformed request syntax or the file host blocking requests.
+          schema:
+            type: object
+            properties: {}
         '404':
           description: The resource was not found.
           schema:
@@ -14603,10 +14663,7 @@ paths:
         - name: product_id
           in: query
           type: string
-          description: |-
-            A comma-separated list of ids of Products whose prices were requested. For example:
-            `?product_id=:id`
-            `?product_id:in=77,80,81`
+          description: 'A comma-separated list of IDs of products whose variants were requested. For example:`?product_id=:id``?product_id:in=77,80,81`'
       responses:
         '200':
           description: ''
@@ -14770,16 +14827,16 @@ paths:
                   sku_id: 330
                   price: 15.99
                   calculated_price: 15.99
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 15.99
+                  retail_price: 15.99
                   map_price: {}
                   weight: 15
                   calculated_weight: 15
                   width: 4
-                  height: {}
-                  depth: {}
+                  height: 4
+                  depth: 4
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -14805,16 +14862,16 @@ paths:
                   sku_id: 331
                   price: 555
                   calculated_price: 555
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 500
+                  retail_price: 555
                   map_price: {}
-                  weight: {}
+                  weight: 15
                   calculated_weight: 15
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -14838,18 +14895,18 @@ paths:
                   product_id: 184
                   sku: LAR-RED
                   sku_id: 332
-                  price: {}
+                  price: 253.99
                   calculated_price: 253.99
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 250
+                  retail_price: 253.99
                   map_price: {}
-                  weight: {}
+                  weight: 15
                   calculated_weight: 15
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -14873,18 +14930,18 @@ paths:
                   product_id: 184
                   sku: SMA-GRE
                   sku_id: 333
-                  price: {}
+                  price: 249
                   calculated_price: 249
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 230
+                  retail_price: 249
                   map_price: {}
-                  weight: {}
+                  weight: 15
                   calculated_weight: 15
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -14908,18 +14965,18 @@ paths:
                   product_id: 184
                   sku: MED-GRE
                   sku_id: 334
-                  price: {}
+                  price: 249
                   calculated_price: 249
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 230
+                  retail_price: 249
                   map_price: {}
-                  weight: {}
+                  weight: 15
                   calculated_weight: 15
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -14943,18 +15000,18 @@ paths:
                   product_id: 184
                   sku: LAR-GRE
                   sku_id: 335
-                  price: {}
+                  price: 253.99
                   calculated_price: 253.99
-                  sale_price: {}
-                  retail_price: {}
+                  sale_price: 230
+                  retail_price: 253.99
                   map_price: {}
-                  weight: {}
+                  weight: 15
                   calculated_weight: 15
-                  width: {}
-                  height: {}
-                  depth: {}
+                  width: 5
+                  height: 5
+                  depth: 5
                   is_free_shipping: false
-                  fixed_cost_shipping_price: {}
+                  fixed_cost_shipping_price: 10
                   purchasing_disabled: false
                   purchasing_disabled_message: ''
                   image_url: ''
@@ -16245,7 +16302,7 @@ paths:
       tags:
         - Variants
         - Catalog
-      description: 'Creates or updates a batch of `Variant` objects. At the time of writing, the current limit is `50` variants. This limit is subject to change.'
+      description: 'Updates a batch of `variant` objects. At the time of writing, the limit is 50 variants. This limit is subject to change.'
       parameters:
         - name: body
           in: body
@@ -16927,6 +16984,69 @@ paths:
           default: application/json
           required: true
       operationId: getCatalogSummary
+  '/catalog/categories/{category_id}/products/sort-order':
+    parameters:
+      - type: integer
+        name: category_id
+        in: path
+        required: true
+        description: The ID of the `Category` to which the resource belongs.
+    get:
+      summary: Get Product Sort Order
+      responses:
+        '200':
+          $ref: '#/responses/ProductSortOrderResponse'
+        '404':
+          $ref: '#/responses/Error404Response'
+      operationId: getsortorders
+      description: |-
+        Returns a list of products and their sort order for a specific category.
+
+        **Usage Notes**
+        * Data pairs are displayed in ascending order based on products' `sort_order` values.
+        * `null` values are allowed for products without specified `sort_order` values.
+        * Products with `sort_order` value of `null` will be displayed after products with valid numerical values.
+      parameters:
+        - type: string
+          in: header
+          name: Accept
+          required: true
+          default: application/json
+        - type: string
+          in: header
+          name: Content-Type
+          required: true
+          default: application/json
+      tags:
+        - Product Sort Order
+    put:
+      summary: Update Product Sort Order
+      operationId: updatesortorder
+      responses:
+        '200':
+          $ref: '#/responses/ProductSortOrderResponse'
+        '404':
+          $ref: '#/responses/Error404Response'
+        '422':
+          $ref: '#/responses/Error422Response'
+      description: Updates sort order of products within a specific category.
+      parameters:
+        - type: string
+          in: header
+          default: application/json
+          name: Accept
+          required: true
+        - type: string
+          in: header
+          name: Content-Type
+          required: true
+          default: application/json
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/productSortOrder'
+      tags:
+        - Product Sort Order
 parameters:
   FilterTemplateFileParam:
     in: query
@@ -19338,7 +19458,7 @@ definitions:
             maxLength: 255
           image_url:
             type: string
-            description: Publicly available image url 
+            description: Publicly available image url
       - properties:
           product_id:
             type: integer
@@ -19832,7 +19952,7 @@ definitions:
     properties:
       image_file:
         description: |
-          The local path to the original image file uploaded to BigCommerce.
+          The local path to the original image file uploaded to BigCommerce. Limit of 1MB per file.
         type: string
       is_thumbnail:
         description: |
@@ -20225,7 +20345,9 @@ definitions:
       - type: object
         properties:
           variants:
-            $ref: '#/definitions/productVariant_Post_Product'
+            type: array
+            items:
+              $ref: '#/definitions/productVariant_Post_Product'
     title: product_Post
   product_Put:
     description: The model for a PUT to update a product.
@@ -21066,10 +21188,10 @@ definitions:
           option_set_display:
             type: string
             description: Legacy template setting which controls if the option set shows up to the side of or below the product image and description.
-      - properties:
           variants:
-            $ref: '#/definitions/productVariant_Full'
-        type: object
+            type: array
+            items:
+              $ref: '#/definitions/productVariant_Full'
     title: product_Full
   productImage_Full:
     title: productImage_Full
@@ -21484,6 +21606,9 @@ definitions:
           If entered, the sale price will be used instead of value in the price field when calculating the product's cost.
         format: float
         minimum: 0
+      map_price:
+        type: number
+        description: Minimum Advertised Price
       tax_class_id:
         type: integer
         description: |
@@ -21856,6 +21981,24 @@ definitions:
           errors:
             $ref: '#/definitions/detailedErrors'
     type: object
+  productSortOrder:
+    title: productSortOrder
+    type: object
+    description: The relative priority of the product among other products inside the category.
+    properties:
+      product_id:
+        type: integer
+        example: 99
+        minimum: 1
+        description: The ID of the associated product.
+      sort_order:
+        type: integer
+        example: 4
+        minimum: 0
+        x-nullable: true
+    required:
+      - product_id
+      - sort_order
 securityDefinitions:
   X-Auth-Token:
     type: apiKey
@@ -28066,6 +28209,68 @@ responses:
             links:
               next: '?page=2&limit=50'
               current: '?page=1&limit=50'
+  Error404Response:
+    description: The requested category was not found.
+    content:
+      application/json:
+        schema:
+          properties:
+            id:
+              type: string
+    schema:
+      $ref: '#/definitions/error_Base'
+  Error422Response:
+    description: |-
+      Unprocessable entity.
+
+      Please verify if all requested products are assigned to the category.
+
+      Please verify if all required fields are present in the request body and are filled with values correctly.
+    content:
+      application/json:
+        schema:
+          properties:
+            id:
+              type: string
+    schema:
+      $ref: '#/definitions/error_Base'
+  ProductSortOrderResponse:
+    description: ''
+    content:
+      application/json:
+        schema:
+          properties:
+            id:
+              type: string
+    schema:
+      allOf:
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: '#/definitions/productSortOrder'
+        - properties:
+            meta:
+              $ref: '#/definitions/metaCollection_Full'
+      type: object
+    examples:
+      Example:
+        data:
+          - product_id: 66
+            sort_order: 7
+          - product_id: 123
+            sort_order: 0
+          - product_id: 14
+            sort_order: null
+          - product_id: 16
+            sort_order: null
+        meta:
+          pagination:
+            total: 4
+            count: 4
+            per_page: 50
+            current_page: 1
+            total_pages: 1
 x-stoplight:
   docs:
     includeDownloadLink: true

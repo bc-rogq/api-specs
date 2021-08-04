@@ -172,8 +172,7 @@ paths:
           $ref: '#/components/responses/order_Resp'
       operationId: updateAnOrder
     delete:
-      description:
-        Archives an order.
+      description: Archives an order.
       summary: Archive an Order
       tags:
         - Orders
@@ -302,6 +301,7 @@ paths:
                       email: elsie@example.com
                   products:
                     - product_id: 184
+                      quantity: 5
                       product_options:
                         - id: 200
                           value: '180'
@@ -562,7 +562,7 @@ paths:
 
         Presuming that a valid carrier code is used, a tracking link is generated if either `shipping_provider` or `tracking_carrier` is supplied alongside a tracking number. Providing only the tracking number will result in an unclickable text in the customer facing email.
 
-        Acceptable values for `shipping_provider` include an empty string (`""`), auspost, canadapost, endicia, usps, fedex, ups, upsready, upsonline, or shipperhq.
+        Acceptable values for `shipping_provider` include an empty string (`""`), auspost, canadapost, endicia, usps, fedex, royalmail, ups, upsready, upsonline, or shipperhq.
 
         Acceptable values for `tracking_carrier` include an empty string (`""`) or one of the valid tracking-carrier values viewable [here](https://github.com/bigcommerce/dev-docs/blob/development/assets/csv/tracking_carrier_values.csv) and downloadable as a .CSV file [here](https://raw.githubusercontent.com/bigcommerce/dev-docs/development/assets/csv/tracking_carrier_values.csv).
       summary: Create Order Shipment
@@ -866,7 +866,7 @@ paths:
                   country_iso2: AU
                   state: New South Wales
                   email: email2@bigcommerce.com
-                  phone: 468444123
+                  phone: '468444123'
       description: |-
         Update a shipping address associated with an order.
 
@@ -880,7 +880,7 @@ paths:
           $ref: '#/components/responses/shippingQuotes_Resp'
       summary: Get Order Shipping Quotes
       description: |-
-        Gets all shipping quotes associated to an order.
+        Gets all shipping quotes persisted on an order.
 
         This is a read only endpoint and the output can vary based on the shipping quote. A shipping quote can only be generated using the storefront at this time. Orders that are created in the control panel or via the API return a 204 for this endpoint since a shipping quote is not generated during that process.
       parameters:
@@ -1093,13 +1093,6 @@ components:
     order_id_path:
       in: path
       name: order_id
-      description: ID of the order
-      required: true
-      schema:
-        type: integer
-    order_id_query:
-      in: query
-      name: order_id_query
       description: ID of the order
       required: true
       schema:
@@ -1533,10 +1526,10 @@ components:
                   street_2: ''
                   city: Austin
                   state: Texas
-                  zip: '78108'
+                  zip: 78108
                   country: United States
                   country_iso2: US
-                  phone: '1234567890'
+                  phone: 1234567890
                   email: janedoe@example.com
                   form_fields:
                     - name: Delivery Instructions
@@ -1624,10 +1617,10 @@ components:
                   street_2: ''
                   city: Austin
                   state: Texas
-                  zip: 78108
+                  zip: '78108'
                   country: United States
                   country_iso2: US
-                  phone: 1234567890
+                  phone: '1234567890'
                   email: janedoe@email.com
                   form_fields:
                     name: Delivery Instructions
@@ -2802,7 +2795,7 @@ components:
                   zip:
                     description: ''
                     example: '12345'
-                    type: string
+                    type: number
                   country:
                     description: ''
                     example: United States
@@ -2883,8 +2876,8 @@ components:
                   - AvaTaxProvider
                   - ''
               customer_locale:
-                type: string,
-                example: \"en\", \"en-us\",
+                type: 'string,'
+                example: 'en'
                 description: The customer's locale
   requestBodies: null
   securitySchemes:
@@ -3408,7 +3401,7 @@ components:
           title: Tracking Carrier
           description: |-
             Tracking carrier for the shipment.
-            Acceptable values include an empty string (`""`) or one of the valid tracking-carrier values viewable [here](https://docs.google.com/spreadsheets/d/1w9c_aECSCGyf-oOrvGeUniDl-ARGKemfZl0qSsav8D4/pubhtml?gid=0&single=true) and downloadable as a .CSV file [here](https://docs.google.com/spreadsheets/d/1mTueEynfcEmwsU2y2Jd2MX-8GKwNZrmlRMBcIElg9aY/pub?gid=0&single=true&output=csv).
+            Acceptable values include an empty string (`""`) or one of the valid tracking-carrier values viewable [here](https://github.com/bigcommerce/dev-docs/blob/development/assets/csv/tracking_carrier_values.csv) and downloadable as a .CSV file [here](https://raw.githubusercontent.com/bigcommerce/dev-docs/development/assets/csv/tracking_carrier_values.csv).
         tracking_link:
           type: string
           description: Returns a tracking link from the shipping service.
@@ -3978,7 +3971,7 @@ components:
           type: string
         customer_locale:
           type: string
-          example: \"en\", \"en-us\",
+          example: 'en'
           description: The customer's locale
         total_ex_tax:
           description: 'Override value for the total, excluding tax. If specified, the field `total_inc_tax` is also required. (Float, Float-As-String, Integer)'
@@ -4020,7 +4013,7 @@ components:
           type: string
           example: TX
         zip:
-          type: number
+          type: string
           example: '12345'
           description: The billing address must include the zip code. The zip code must be two or more characters.
         country:
@@ -4030,7 +4023,7 @@ components:
           type: string
           example: US
         phone:
-          type: number
+          type: string
         email:
           type: string
           example: janedoe@example.com

@@ -29,6 +29,7 @@ info:
 tags:
   - name: Email Statuses
   - name: Search Filters
+  - name: Store Locale
   - name: Storefront Category
   - name: Storefront Robotstxt
   - name: Storefront Search
@@ -274,76 +275,6 @@ paths:
         - $ref: '#/components/parameters/RequiredChannelIdParamForDelete'
         - $ref: '#/components/parameters/KeysToDelete'
       description: Delete storefront robots.txt.
-  /settings/storefront/category:
-    get:
-      summary: Get Category Settings
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/StorefrontCategorySettings'
-                  meta:
-                    type: object
-              examples:
-                example-1:
-                  value:
-                    data:
-                      listing_mode: null
-                      default_product_sort: bestselling
-                      category_tree_depth: 0
-                    meta: {}
-        '422':
-          description: Provided settings could not be applied for some reason - detailed errors in the response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      parameters:
-        - $ref: '#/components/parameters/ChannelIdParam'
-      description: Get storefront category settings.
-      tags:
-        - Storefront Category
-    put:
-      summary: Update Category Settings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StorefrontCategorySettings'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/StorefrontCategorySettings'
-                  meta:
-                    type: object
-      parameters:
-        - $ref: '#/components/parameters/ChannelIdParam'
-      tags:
-        - Storefront Category
-      description: Update storefront category settings.
-    delete:
-      summary: Delete  Category
-      tags:
-        - Storefront Category
-      operationId: delete-settings-storefrontcategory
-      responses:
-        '200':
-          description: OK
-      parameters:
-        - $ref: '#/components/parameters/RequiredChannelIdParamForDelete'
-        - $ref: '#/components/parameters/KeysToDelete'
-      description: Delete storefront category settings.
   /settings/storefront/search:
     get:
       summary: Get Search Settings
@@ -763,6 +694,22 @@ paths:
                     $ref: '#/components/schemas/EnabledTransactionalEmails'
                   meta:
                     type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      abandoned_cart_email: true
+                      account_details_changed_email: true
+                      combined_order_status_email: true
+                      createaccount_email: true
+                      createguestaccount_email: true
+                      giftcertificate_email: true
+                      invoice_email: true
+                      ordermessage_notification: true
+                      return_confirmation_email: true
+                      return_statuschange_email: true
+                      product_review_email: false
+                    meta: {}
       operationId: get-settings-emails-enabled
       parameters:
         - $ref: '#/components/parameters/ChannelIdParam'
@@ -784,11 +731,41 @@ paths:
                     $ref: '#/components/schemas/EnabledTransactionalEmails'
                   meta:
                     type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      abandoned_cart_email: true
+                      account_details_changed_email: true
+                      combined_order_status_email: true
+                      createaccount_email: true
+                      createguestaccount_email: true
+                      giftcertificate_email: true
+                      invoice_email: true
+                      ordermessage_notification: true
+                      return_confirmation_email: true
+                      return_statuschange_email: true
+                      product_review_email: false
+                    meta: {}
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EnabledTransactionalEmails'
+            examples:
+              Example:
+                value:
+                  abandoned_cart_email: true
+                  account_details_changed_email: true
+                  combined_order_status_email: true
+                  createaccount_email: true
+                  createguestaccount_email: true
+                  giftcertificate_email: true
+                  invoice_email: true
+                  ordermessage_notification: true
+                  return_confirmation_email: true
+                  return_statuschange_email: true
+                  product_review_email: false
       parameters:
         - $ref: '#/components/parameters/ChannelIdParam'
     delete:
@@ -802,6 +779,80 @@ paths:
           description: No Content
       parameters:
         - $ref: '#/components/parameters/ChannelIdParam'
+  /settings/store/locale:
+    get:
+      summary: Get Locale Settings
+      description: Returns global locale settings.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Locale'
+                  meta:
+                    type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      default_shopper_language: en
+                      store_country: United States
+                      shopper_language_selection_method: default_shopper_language
+                    meta: {}
+        '422':
+          description: Provided settings could not be applied for some reason - detailed errors in the response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Store Locale
+    put:
+      summary: Update Locale Settings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Locale'
+                  meta:
+                    type: object
+              examples:
+                Example:
+                  value:
+                    data:
+                      default_shopper_language: en
+                      store_country: United States
+                      shopper_language_selection_method: default_shopper_language
+                    meta: {}
+        '422':
+          description: Provided settings could not be applied for some reason - detailed errors in the response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Locale'
+            examples:
+              Example:
+                value:
+                  default_shopper_language: en
+                  store_country: United States
+                  shopper_language_selection_method: default_shopper_language
+      tags:
+        - Store Locale
+      description: Updates global locale settings.
 components:
   schemas:
     AnalyticsProvider:
@@ -843,15 +894,6 @@ components:
             - none
         meta_keywords:
           type: string
-    StorefrontCategorySettings:
-      type: object
-      properties:
-        listing_mode:
-          $ref: ''
-        default_product_sort:
-          $ref: '#/components/schemas/ProductSortEnumValues'
-        category_tree_depth:
-          type: integer
     StorefrontSearchSettings:
       type: object
       properties:
@@ -875,6 +917,29 @@ components:
           type: string
         store_address:
           type: string
+    Locale:
+      description: 'The basic locale settings for a store, used to give shopper information about languages, countries, etc.'
+      type: object
+      properties:
+        default_shopper_language:
+          type: string
+          default: en
+        store_country:
+          type: string
+          default: United States
+        shopper_language_selection_method:
+          type: string
+          enum:
+            - browser
+            - default_shopper_language
+          example: default_shopper_language
+          default: default_shopper_language
+          description: |-
+            Determines whether to display the storefront content in the shopper's browser language or the shopper's selected default language.
+
+            Available values:
+            * `browser` - language updates automatically based on the shopper browser language. Multiple languages are supported.
+            * `default_shopper_language` - content is displayed in a single language based on the set `default_shopper_language`. Only the selected language is supported.
     StorefrontStatus:
       title: ''
       type: object
@@ -1131,15 +1196,15 @@ components:
           type: boolean
         combined_order_status_email:
           type: boolean
-        create_account_email:
+        createaccount_email:
           type: boolean
-        create_guest_account_email:
+        createguestaccount_email:
           type: boolean
-        gift_certificate_email:
+        giftcertificate_email:
           type: boolean
         invoice_email:
           type: boolean
-        order_message_notification_email:
+        ordermessage_notification:
           type: boolean
         return_confirmation_email:
           type: boolean
