@@ -94,7 +94,16 @@ paths:
               schema: {}
       operationId: getAnOrder
     put:
-      description: 'Updates an *Order*. To learn more about creating or updating orders, see [Orders Overview](/api-docs/orders/orders-api-overview).'
+      description: |-
+        Updates an *Order*. 
+
+        To add a product to an existing order, don't include `id` in the body. Include `product_options` if adding a product with variants.
+
+        To update a product in an order, include `id` in the body. The body should only contain the fields that need to be updated. Those fields that are omitted will not be changed.
+
+        To remove a product from an order, set that product's `quantity` to `0`.
+
+        To learn more about creating or updating orders, see [Orders Overview](/api-docs/orders/orders-api-overview).
       summary: Update an Order
       tags:
         - Orders
@@ -148,7 +157,7 @@ paths:
                         - id: 230
                           value: '192'
                   customer_locale: en
-              Adding an Existing Product:
+              Adding an existing product to order:
                 value:
                   products:
                     - product_id: 123
@@ -158,7 +167,7 @@ paths:
                         value: 12
                       price_inc_tax: 12.45
                       price_ex_tax: 10.12
-              Adding a New Products:
+              Adding a new product to order:
                 value:
                   products:
                     - name: BigCommerce Coffee Mug
@@ -166,13 +175,23 @@ paths:
                       price_inc_tax: 12.45
                       price_ex_tax: 10.12
                       sku: MUG-GRY
+              Removing a product from an order:
+                value:
+                  products:
+                    - product_id: 123
+                      quantity: 0
+                      product_options:
+                        id: 56
+                        value: 12
+                      price_inc_tax: 12.45
+                      price_ex_tax: 10.12
         required: true
       responses:
         '200':
           $ref: '#/components/responses/order_Resp'
       operationId: updateAnOrder
     delete:
-      description: Archives an order.
+      description: 'Archives an order. To remove a single product from an order, see `PUT /orders/{order_id}`.'
       summary: Archive an Order
       tags:
         - Orders
@@ -307,6 +326,39 @@ paths:
                           value: '180'
                         - id: 230
                           value: '192'
+              Product with a Drop Down and a Text Field Modifier:
+                value:
+                  status_id: 0
+                  customer_id: 11
+                  billing_address:
+                    first_name: Jane
+                    last_name: Doe
+                    street_1: 123 Main Street
+                    city: Austin
+                    state: Texas
+                    zip: '78751'
+                    country: United States
+                    country_iso2: US
+                    email: janedoe@example.com
+                  shipping_addresses:
+                    - first_name: Trish
+                      last_name: Test
+                      company: Acme Pty Ltd
+                      street_1: 666 Sussex St
+                      city: Austin
+                      state: Texas
+                      zip: '78751'
+                      country: United States
+                      country_iso2: US
+                      email: elsie@example.com
+                  products:
+                    - product_id: 184
+                      quantity: 5
+                      product_options:
+                        - id: 200
+                          value: '180'
+                        - id: 230
+                          value: Custom Message
               Multiple Products:
                 value:
                   status_id: 0
@@ -1290,6 +1342,7 @@ components:
                   store_credit_amount: '0.0000'
                   gift_certificate_amount: '0.0000'
                   ip_address: 00.000.000.000
+                  ip_address_v6: ''
                   geoip_country: United States
                   geoip_country_iso2: US
                   currency_id: 1
@@ -1503,6 +1556,7 @@ components:
                 store_credit_amount: '0.0000'
                 gift_certificate_amount: '0.0000'
                 ip_address: ''
+                ip_address_v6: ''
                 geoip_country: ''
                 geoip_country_iso2: ''
                 currency_id: 1
@@ -2545,7 +2599,7 @@ components:
                 type: number
               date_created:
                 type: string
-                description: 'The date this order was created. If not specified, will default to the current time. The date should be in RFC 2822 format, e.g.: Tue, 20 Nov 2012 00:00:00 +0000'
+                description: 'The date the order was created, formatted in the RFC-2822 standard. You set this attribute on Order creation (POST) to support the migration of historical orders. If you do not provide a value, then it will default to the current date/time. e.g., `Tue, 20 Nov 2012 00:00:00 +0000`'
               date_modified:
                 type: string
                 description: A read-only value representing the last modification of the order. Do not attempt to modify or set this value in a POST or PUT operation. RFC-2822
@@ -2835,11 +2889,15 @@ components:
                 example: www
                 type: string
               external_source:
-                description: 'For orders submitted or modified via the API, using a PUT or POST operation, you can optionally pass in a value identifying the system used to generate the order. For example: `POS`. Otherwise, the value will be null.'
+                description: |-
+                  This value identifies an external system that generated the order and submitted it to BigCommerce via the Orders API.
+                  * When supplying the value, we recommend combining the type of system and vendor, e.g., ERP (Acumatica) or POS (Square).
+                  * If you are migrating historical orders processed on another eCommerce platform to BigCommerce, supply the following code as the value: M-MIG. This code will exclude historical orders from the store’s GMV/order count, which factors into pricing.
+                  * If you do not provide a value, then it will default to null..
                 example: 'null'
-                type:
-                  - string
-                  - 'null'
+                oneOf:
+                  - type: string
+                  - type: null
               products:
                 $ref: '#/components/schemas/products_Resource'
               shipping_addresses:
@@ -2877,7 +2935,7 @@ components:
                   - ''
               customer_locale:
                 type: 'string,'
-                example: 'en'
+                example: en
                 description: The customer's locale
   requestBodies: null
   securitySchemes:
@@ -3854,7 +3912,7 @@ components:
           example: Thank you
           type: string
         date_created:
-          description: 'The date this order was created. If not specified, will default to the current time. The date should be in RFC 2822 format.'
+          description: 'The date the order was created, formatted in the RFC-2822 standard. You set this attribute on Order creation (POST) to support the migration of historical orders. If you do not provide a value, then it will default to the current date/time. e.g., `Tue, 20 Nov 2012 00:00:00 +0000`'
           type: string
         default_currency_code:
           description: The currency code of the transactional currency the shopper pays in; writeable when multi-currency is enabled.
@@ -3870,15 +3928,19 @@ components:
         external_id:
           description: 'ID of the order in another system. For example, the Amazon Order ID if this is an Amazon order.This field can be updated in a /POST, but using a /PUT to update the order will return a 400 error. The field ''external_id'' cannot be written to. Please remove it from your request before trying again. It can not be overwritten once set.'
           example: null
-          type:
-            - string
-            - 'null'
+          oneOf:
+            - type: string
+            - type: null
         external_source:
-          description: 'For orders submitted or modified via the API, using a PUT or POST operation, you can optionally pass in a value identifying the system used to generate the order. For example: `POS`. Otherwise, the value will be null.'
+          description: |-
+            This value identifies an external system that generated the order and submitted it to BigCommerce via the Orders API.
+            * When supplying the value, we recommend combining the type of system and vendor, e.g., ERP (Acumatica) or POS (Square).
+            * If you are migrating historical orders processed on another eCommerce platform to BigCommerce, supply the following code as the value: M-MIG. This code will exclude historical orders from the store’s GMV/order count, which factors into pricing.
+            * If you do not provide a value, then it will default to null.
           example: 'null'
-          type:
-            - string
-            - 'null'
+          oneOf:
+            - type: string
+            - type: null
         geoip_country:
           description: 'The full name of the country where the customer made the purchase, based on the IP.'
           example: United States
@@ -3896,9 +3958,21 @@ components:
           example: '0.0000'
           type: string
         ip_address:
-          description: 'IP Address of the customer, if known.'
-          example: 12.345.678.910
           type: string
+          description: |-
+            IPv4 Address of the customer, if known.
+
+            Note: You can set either `ip_address` or `ip_address_v6`. Setting the `ip_address` value will reset the `ip_address_v6` value and vice versa.
+          example: 12.345.678.910
+          maxLength: 30
+        ip_address_v6:
+          type: string
+          description: |-
+            IPv6 Address of the customer, if known.
+
+            Note: You can set either `ip_address` or `ip_address_v6`. Setting the `ip_address_v6` value will reset the `ip_address` value and vice versa.
+          example: '2001:db8:3333:4444:5555:6666:7777:8888'
+          maxLength: 39
         is_deleted:
           description: 'Indicates whether the order was deleted (archived). Set to to true, to archive an order.'
           example: false
@@ -3971,7 +4045,7 @@ components:
           type: string
         customer_locale:
           type: string
-          example: 'en'
+          example: en
           description: The customer's locale
         total_ex_tax:
           description: 'Override value for the total, excluding tax. If specified, the field `total_inc_tax` is also required. (Float, Float-As-String, Integer)'
@@ -4257,7 +4331,7 @@ components:
           properties:
             id:
               type: integer
-              description: 'The order product `id`. To add a product to an existing order, don''t include `id ` in the payload. `id` is required when updating an order product.'
+              description: 'The order product `id`. To add a product to an existing order, don''t include `id` in the payload. `id` is required when updating an order product.'
         - $ref: '#/components/schemas/orderCatalogProduct_Post'
     orderCatalogProduct_Post:
       title: orderCatalogProduct_Post
@@ -4287,7 +4361,7 @@ components:
           description: The product name that is shown to merchant in control panel.
         product_options:
           type: array
-          description: '`product_options` are required when adding a product with variants.'
+          description: 'List of product variant options and modifiers. `product_options` are required when adding a product with variants and not specifying the `variant_id`, or when products have mandatory modifiers.'
           items:
             type: object
             properties:
@@ -4295,6 +4369,17 @@ components:
                 type: integer
               value:
                 type: string
+                description: |-
+                  Depending on the option type, value can be one of the following:
+                  - The variant option value id or the modifier value id for modifier types with a list of defined values, such as drop down or checkbox modifiers.
+                  - The modifier value for modifier types without a list of defined values, such as text field or date field modifiers.
+
+                  Notes:
+                  - The following option types are not currently supported via api:
+                    - File upload
+                    - Pick list
+                  - For date modifiers use either the `YYYY-MM-DDThh:mm:ss±hh:mm` or the `YYYY-MM-DD` ISO-8601 formats. The date field modifier values are saved and retuned as timestamps. For values entered using the YYYY-MM-DD format, the store timezone is used when creating the timestamp.
+                  - For multi-line text field modifiers, use the `\n` characters for separating the lines.
               display_name:
                 type: string
                 example: couleur
